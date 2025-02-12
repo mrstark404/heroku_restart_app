@@ -2,6 +2,7 @@ import os
 import subprocess
 import time
 import requests
+from alive import keep_alive
 
 # Set your Heroku API details
 HEROKU_APP_NAME = os.getenv("HEROKU_APP_NAME")
@@ -51,4 +52,5 @@ def monitor_heroku_logs():
         time.sleep(30)  # Wait before restarting log monitoring
 
 # Run the log monitoring function continuously
+keep_alive()
 monitor_heroku_logs()
