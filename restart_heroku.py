@@ -6,50 +6,60 @@ from alive import keep_alive
 
 # Set your Heroku API details
 HEROKU_APP_NAME = os.getenv("HEROKU_APP_NAME")
-HEROKU_API_KEY = os.getenv("HEROKU_API_KEY")
+HEROKU_OAUTH_TOKEN = os.getenv("HEROKU_OAUTH_TOKEN")
 
-def restart_heroku_app():
-    url = f"https://api.heroku.com/apps/{HEROKU_APP_NAME}/dynos"
-    headers = {
-        "Accept": "application/vnd.heroku+json; version=3",
-        "Authorization": f"Bearer {HEROKU_API_KEY}",
+
+
+HEADERS = {
+    "Authorization": f"Bearer {HEROKU_OAUTH_TOKEN}",
+    "Accept": "application/vnd.heroku+json; version=3"
+}
+
+def fetch_logs():
+    """Fetch the latest logs from Heroku."""
+    url = f"https://api.heroku.com/apps/{HEROKU_APP_NAME}/log-sessions"
+    payload = {
+        "dyno": None,
+        "lines": 100,
+        "source": "app",
+        "tail": False
     }
-    response = requests.delete(url, headers=headers)
+    
+    response = requests.post(url, json=payload, headers=HEADERS)
+
+    if response.status_code == 201:
+        log_url = response.json().get("logplex_url")
+        if log_url:
+            log_response = requests.get(log_url)
+            return log_response.text
+    print(f"❌ Error fetching logs: {response.status_code}, {response.text}")
+    return None
+
+def restart_app():
+    """Restart the Heroku app."""
+    url = f"https://api.heroku.com/apps/{HEROKU_APP_NAME}/dynos"
+    response = requests.delete(url, headers=HEADERS)
     
     if response.status_code == 202:
-        print("✅ Heroku app restarted successfully!")
+        print("✅ App restarted successfully!")
     else:
-        print(f"❌ Failed to restart app. Error: {response.text}")
+        print(f"❌ Error restarting app: {response.status_code}, {response.text}")
 
-def monitor_heroku_logs():
-    print(f"🔍 Monitoring logs for Heroku app: {HEROKU_APP_NAME}...\n")
-
+def monitor_logs():
+    """Continuously check logs and restart on error."""
     while True:
-        try:
-            process = subprocess.Popen(
-                ["heroku", "logs", "--tail", "--app", HEROKU_APP_NAME],
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
-                text=True
-            )
-
-            # Read logs line by line
-            for line in iter(process.stdout.readline, ""):
-                log_line = line.strip()
-                print(f"📜 Log: {log_line}")  # Print log to confirm fetching
-                
-                if "OSError: Connection lost" in log_line:
-                    print("⚠️ Detected 'OSError: Connection lost' in logs! Restarting Heroku app...")
-                    restart_heroku_app()
-                    time.sleep(60)  # Wait 60 seconds before restarting again
-
-        except Exception as e:
-            print(f"❌ Error in monitoring logs: {e}")
+        logs = fetch_logs()
+        if logs:
+            print("📜 Logs fetched successfully!")  # Confirm logs are received
+            print(logs)  # Print logs for debugging
+            
+            if "OSError: Connection lost" in logs:
+                print("⚠️ Detected 'Connection lost' error. Restarting app...")
+                restart_app()
         
-        # Restart log monitoring after 10 seconds if process fails
-        print("🔄 Restarting log monitoring in 10 seconds...")
-        time.sleep(10)
+        time.sleep(30)  # Wait before checking again
 
-# Run the log monitoring function continuously
-keep_alive()
-monitor_heroku_logs()
+if __name__ == "__main__":
+    print(f"🚀 Monitoring Heroku logs for '{HEROKU_APP_NAME}'...")
+    keep_alive()
+    monitor_logs()
