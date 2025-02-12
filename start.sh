@@ -2,8 +2,8 @@
 
 # Update and install required dependencies
 echo "Updating system and installing dependencies..."
-sudo apt update && sudo apt upgrade -y
-sudo apt install curl wget software-properties-common -y
+apt update && apt upgrade -y
+apt install curl wget software-properties-common -y
 
 # Install Heroku CLI
 echo "Installing Heroku CLI..."
