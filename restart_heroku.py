@@ -65,8 +65,8 @@ def monitor_logs():
                 print("⚠️ Detected 'Connection lost' error. Restarting app...")
                 restart_app()
         
-        print("⏳ Waiting 30 seconds before checking logs again...")
-        time.sleep(30)  # Wait before checking again
+        print("⏳ Waiting 120 seconds before checking logs again...")
+        time.sleep(120)  # Wait before checking again
 
 if __name__ == "__main__":
     print(f"🚀 Monitoring Heroku logs for '{HEROKU_APP_NAME}'...")
