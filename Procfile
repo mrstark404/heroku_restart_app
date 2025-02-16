@@ -1,1 +1,1 @@
-worker: python monitor_heroku.py
+web: python restart_heroku.py
