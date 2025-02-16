@@ -11,4 +11,4 @@ COPY . .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Run the monitoring script
-CMD ["python", "restart_heroku.py"]
+CMD ["bash", "start.sh"]
