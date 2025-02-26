@@ -61,8 +61,8 @@ def monitor_logs():
             print("📜 Logs Preview:")
             print(logs[:500])  # Print only the first 500 characters to avoid spam
 
-            if "OSError: Connection lost" in logs:
-                print("⚠️ Detected 'Connection lost' error. Restarting app...")
+            if "OSError: Connection lost" in logs or "socket.send() raised exception" in logs:
+                print("⚠️ Detected 'Connection lost' or 'socket.send()' error. Restarting app...")
                 restart_app()
         
         print("⏳ Waiting 120 seconds before checking logs again...")
